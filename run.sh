@@ -14,5 +14,5 @@ if [[ "$1" == "--dev" ]]; then
 else
     echo "Running in production mode..."
     export $(grep -v '^#' prs.env | xargs)
-    APT_MIRROR="$APT_MIRROR" PIP_INDEX_URL="$PIP_INDEX_URL" docker compose -p api up -d
+    HTTP_PROXY="$HTTP_PROXY" HTTPS_PROXY="$HTTPS_PROXY" APT_MIRROR="$APT_MIRROR" PIP_INDEX_URL="$PIP_INDEX_URL" docker compose -p api up -d
 fi
