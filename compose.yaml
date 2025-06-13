@@ -1,0 +1,40 @@
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        APT_MIRROR: ${APT_MIRROR}
+        PIP_INDEX_URL: ${PIP_INDEX_URL}
+    container_name: prs_api
+    ports:
+      - "${PRS_PORT:-8080}:80"
+    env_file: prs.env
+    volumes:
+      - .:/app
+    networks:
+      - prs_network
+
+  readium:
+    image: ghcr.io/readium/readium:0.2.1
+    container_name: prs_readium
+    ports:
+      - "15080"
+    depends_on:
+      - api
+    volumes:
+      - readium_data:/srv/publications
+    command: >
+      serve /srv/publications
+      --address 0.0.0.0
+      --debug
+    networks:
+      - prs_network
+
+networks:
+  prs_network:
+    driver: bridge
+
+volumes:
+  readium_data:
