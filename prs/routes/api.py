@@ -10,6 +10,7 @@
 import base64
 import requests
 import internetarchive as ia
+from urllib.parse import quote
 from fastapi import (
     APIRouter,
     Request,
@@ -58,9 +59,10 @@ async def apis(request: Request):
 async def get_manifest(request: Request, source: str, book_id: str):
     def patch_manifest(manifest):
         manifest_uri = f"{prs_uri(request)}/api/{source}/{book_id}/manifest.json"
+        encoded_manifest_uri = quote(manifest_uri, safe='')
         for i in range(len(manifest['links'])):
             if manifest['links'][i].get('rel') == 'self':
-                manifest['links'][i]['href'] = manifest_uri
+                manifest['links'][i]['href'] = encoded_manifest_uri
         return manifest
 
     # TODO: permission/auth checks go here, or decorate this route
