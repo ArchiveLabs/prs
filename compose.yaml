@@ -26,7 +26,8 @@ services:
     volumes:
       - readium_data:/srv/publications
     command: >
-      serve /srv/publications
+      serve
+      --file-directory /srv/publications
       --address 0.0.0.0
       --debug
     networks:
