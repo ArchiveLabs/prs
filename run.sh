@@ -2,6 +2,13 @@
 
 ./docker/configure.sh
 
+BUILD_FLAG=""
+
+# Check if any argument is --rebuild
+if [[ " $* " == *" --rebuild "* ]]; then
+  BUILD_FLAG="--build"
+fi
+
 if [[ "$1" == "--dev" ]]; then
     echo "Running in development mode..."
     if [ ! -f ./env/bin/activate ]; then
@@ -14,5 +21,9 @@ if [[ "$1" == "--dev" ]]; then
 else
     echo "Running in production mode..."
     export $(grep -v '^#' prs.env | xargs)
-    HTTP_PROXY="$HTTP_PROXY" HTTPS_PROXY="$HTTPS_PROXY" APT_MIRROR="$APT_MIRROR" PIP_INDEX_URL="$PIP_INDEX_URL" docker compose -p api up -d
+
+    if [[ " $* " == *" --rebuild "* ]]; then
+        HTTP_PROXY="$HTTP_PROXY" HTTPS_PROXY="$HTTPS_PROXY" APT_MIRROR="$APT_MIRROR" PIP_INDEX_URL="$PIP_INDEX_URL" docker compose -p api build --no-cache api readium
+    fi
+    HTTP_PROXY="$HTTP_PROXY" HTTPS_PROXY="$HTTPS_PROXY" APT_MIRROR="$APT_MIRROR" PIP_INDEX_URL="$PIP_INDEX_URL" docker compose -p api up -d api readium
 fi

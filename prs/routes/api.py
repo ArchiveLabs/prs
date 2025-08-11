@@ -18,7 +18,7 @@ from fastapi import (
     status
 )
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from prs.configs import PORT
+from prs.configs import PORT, READIUM_HOST_PORT
 
 router = APIRouter()
 
@@ -38,6 +38,10 @@ def encode_book_path(source: str, book_id: str) -> str:
     return encoded_filepath.replace('/', '_').replace('+', '-').replace('=', '')
 
 def prs_uri(request: Request, port=True):
+    print("=" * 100)
+    print(request.url.scheme)
+    print(dict(request))
+    print("=" * 100)
     host = f"{request.url.scheme}://{request.url.hostname}"
     if port and PORT and PORT not in {80, 443}:
         host += f":{PORT}"
@@ -55,10 +59,16 @@ async def apis(request: Request):
         }
     }
 
+@router.get("/{source}/{book_id}/read")
+async def redirect_reader(request: Request, source: str, book_id: str):
+    manifest_url = f"{prs_uri(request, port=False)}/api/{source}/{book_id}/manifest.json"
+    manifest_uri = quote(manifest_url, safe='')
+    return RedirectResponse(f"https://playground.readium.org/read/manifest/{manifest_uri}")
+
 @router.get("/{source}/{book_id}/manifest.json")
 async def get_manifest(request: Request, source: str, book_id: str):
     def patch_manifest(manifest):
-        manifest_uri = f"{prs_uri(request)}/api/{source}/{book_id}/manifest.json"
+        manifest_uri = f"{prs_uri(request, port=False)}/api/{source}/{book_id}/manifest.json"
         encoded_manifest_uri = quote(manifest_uri, safe='')
         for i in range(len(manifest['links'])):
             if manifest['links'][i].get('rel') == 'self':
@@ -67,7 +77,7 @@ async def get_manifest(request: Request, source: str, book_id: str):
 
     # TODO: permission/auth checks go here, or decorate this route
 
-    readium_uri = f"http://prs_readium:15080/{encode_book_path(source, book_id)}/manifest.json"
+    readium_uri = f"http://{READIUM_HOST_PORT}/{encode_book_path(source, book_id)}/manifest.json"
     manifest = requests.get(readium_uri).json()
     return patch_manifest(manifest)
 
@@ -75,9 +85,10 @@ async def get_manifest(request: Request, source: str, book_id: str):
 @router.get("/{source}/{book_id}/{readium_uri:path}")
 async def proxy_readium(request: Request, source: str, book_id: str, readium_uri: str, format: str=".epub"):
     # TODO: permission/auth checks go here, or decorate this route
-    readium_url = f"http://prs_readium:15080/{encode_book_path(source, book_id)}/{readium_uri}"
+    readium_url = f"http://{READIUM_HOST_PORT}/{encode_book_path(source, book_id)}/{readium_uri}"
     r = requests.get(readium_url, params=dict(request.query_params))
     if readium_url.endswith('.json'):
         return r.json()
     content_type = r.headers.get("Content-Type", "application/octet-stream")
     return Response(content=r.content, media_type=content_type)
+

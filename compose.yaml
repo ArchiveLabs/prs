@@ -9,7 +9,7 @@ services:
         PIP_INDEX_URL: ${PIP_INDEX_URL}
     container_name: prs_api
     ports:
-      - "${PRS_PORT:-8080}:80"
+      - "${PRS_PORT:-8080}:8083"
     env_file: prs.env
     volumes:
       - .:/app
@@ -30,6 +30,7 @@ services:
       --file-directory /srv/publications
       --address 0.0.0.0
       --debug
+      --scheme ${PRS_SCHEME:-http}
     networks:
       - prs_network
 
