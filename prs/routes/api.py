@@ -38,10 +38,6 @@ def encode_book_path(source: str, book_id: str) -> str:
     return encoded_filepath.replace('/', '_').replace('+', '-').replace('=', '')
 
 def prs_uri(request: Request, port=True):
-    print("=" * 100)
-    print(request.url.scheme)
-    print(dict(request))
-    print("=" * 100)
     host = f"{request.url.scheme}://{request.url.hostname}"
     if port and PORT and PORT not in {80, 443}:
         host += f":{PORT}"
