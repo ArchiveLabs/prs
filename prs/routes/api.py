@@ -18,7 +18,7 @@ from fastapi import (
     status
 )
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from prs.configs import SERVICE_URL, PORT, READIUM_HOST_PORT
+from prs.configs import BASE_URL, PORT, READIUM_HOST_PORT
 
 router = APIRouter()
 
@@ -42,12 +42,10 @@ def encode_book_path(source: str, book_id: str) -> str:
     return encoded_filepath.replace('/', '_').replace('+', '-').replace('=', '')
 
 def prs_uri(request: Request):
-    if SERVICE_URL:
-        return SERVICE_URL
     if host := request.headers.get('x-forwarded-host'):
-        return f"{request.url.scheme}://{host}"
+        return f"{request.url.scheme}://{host}{BASE_URL}"
     port = f":{PORT}" if PORT not in {80, 443} else ""
-    return f"{request.url.scheme}://{request.url.hostname}{port}"
+    return f"{request.url.scheme}://{request.url.hostname}{port}{BASE_URL}"
 
 @router.get('/', status_code=status.HTTP_200_OK)
 async def apis(request: Request):

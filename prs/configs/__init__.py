@@ -21,7 +21,7 @@ TESTING = os.getenv("TESTING", "false").lower() == "true"
 # API server configuration
 HOST = os.environ.get('PRS_HOST', '0.0.0.0')
 PORT = int(os.environ.get('PRS_PORT', 8080))
-SERVICE_URL = os.environ.get('PRS_URL')
+BASE_URL = os.environ.get('PRS_BASE_URL', '')
 READIUM_HOST_PORT = os.environ.get('NOMAD_ADDR_readium', 'prs_readium:15080')
 
 WORKERS = int(os.environ.get('PRS_WORKERS', 1))
@@ -37,4 +37,4 @@ OPTIONS = {
     'workers': WORKERS,
 }
 
-__all__ = ['SERVICE_URL', 'HOST', 'PORT', 'DEBUG', 'OPTIONS', 'TESTING']
+__all__ = ['BASE_URL', 'HOST', 'PORT', 'DEBUG', 'OPTIONS', 'TESTING']

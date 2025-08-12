@@ -20,7 +20,7 @@ made available through docker `compose.yml`. Finally, when the python
 application starts, many of these `env` variables are loaded via
 `configs/__init__.py`.
 
-* `PRS_URL` can be (optionally) used to specify the public service URL, e.g. "https://example.com/api"
+* `PRS_BASE_URL` can be (optionally) used to specify a base url "/api" -> "https://example.com/api"
 
 ## Uvicorn
 

@@ -30,7 +30,7 @@ services:
       --file-directory /srv/publications
       --address 0.0.0.0
       --debug
-      --scheme ${PRS_SCHEME:-http}
+      --scheme http,https
     networks:
       - prs_network
 
