@@ -18,7 +18,7 @@ from fastapi import (
     status
 )
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from prs.configs import PORT, READIUM_HOST_PORT
+from prs.configs import SERVICE_URL, PORT, READIUM_HOST_PORT
 
 router = APIRouter()
 
@@ -27,6 +27,10 @@ def ia_get_epub_filepath(item_id):
     for file in item.files:
         if file['name'].endswith('.epub'):
             return f"https://archive.org/download/{item_id}/{file['name']}"
+
+def ol_get_epub_filepath(olid):
+    # fetch olid from openlibrary and get url (if ends with epub)
+    pass
 
 def encode_book_path(source: str, book_id: str) -> str:
     source_to_filepath = {
@@ -37,11 +41,13 @@ def encode_book_path(source: str, book_id: str) -> str:
     encoded_filepath = base64.b64encode(filepath.encode()).decode()
     return encoded_filepath.replace('/', '_').replace('+', '-').replace('=', '')
 
-def prs_uri(request: Request, port=True):
-    host = f"{request.url.scheme}://{request.url.hostname}"
-    if port and PORT and PORT not in {80, 443}:
-        host += f":{PORT}"
-    return host
+def prs_uri(request: Request):
+    if SERVICE_URL:
+        return SERVICE_URL
+    if host := request.headers.get('x-forwarded-host'):
+        return f"{request.url.scheme}://{host}"
+    port = f":{PORT}" if PORT not in {80, 443} else ""
+    return f"{request.url.scheme}://{request.url.hostname}{port}"
 
 @router.get('/', status_code=status.HTTP_200_OK)
 async def apis(request: Request):
@@ -57,21 +63,21 @@ async def apis(request: Request):
 
 @router.get("/{source}/{book_id}/read")
 async def redirect_reader(request: Request, source: str, book_id: str):
-    manifest_url = f"{prs_uri(request, port=False)}/api/{source}/{book_id}/manifest.json"
+    manifest_url = f"{prs_uri(request)}/api/{source}/{book_id}/manifest.json"
     manifest_uri = quote(manifest_url, safe='')
     return RedirectResponse(f"https://playground.readium.org/read/manifest/{manifest_uri}")
 
 @router.get("/{source}/{book_id}/manifest.json")
 async def get_manifest(request: Request, source: str, book_id: str):
     def patch_manifest(manifest):
-        manifest_uri = f"{prs_uri(request, port=False)}/api/{source}/{book_id}/manifest.json"
+        manifest_uri = f"{prs_uri(request)}/api/{source}/{book_id}/manifest.json"
         encoded_manifest_uri = quote(manifest_uri, safe='')
         for i in range(len(manifest['links'])):
             if manifest['links'][i].get('rel') == 'self':
                 manifest['links'][i]['href'] = encoded_manifest_uri
         return manifest
 
-    # TODO: permission/auth checks go here, or decorate this route
+    # TODO: s3 permission/auth checks go here for protected epubs, or decorate this route
 
     readium_uri = f"http://{READIUM_HOST_PORT}/{encode_book_path(source, book_id)}/manifest.json"
     manifest = requests.get(readium_uri).json()

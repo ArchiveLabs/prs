@@ -10,7 +10,7 @@
 import os
 import netifaces
 
-def get_docker_default_gateway_ip():
+def get_default_gateway_ip():
     if _gateways := netifaces.gateways():
         if 'default' in _gateways:
             return _gateways['default'][netifaces.AF_INET][0]
@@ -19,17 +19,15 @@ def get_docker_default_gateway_ip():
 TESTING = os.getenv("TESTING", "false").lower() == "true"
 
 # API server configuration
-DOMAIN = os.environ.get('PRS_DOMAIN', '127.0.0.1')
 HOST = os.environ.get('PRS_HOST', '0.0.0.0')
-READIUM_HOST_PORT = os.environ.get('NOMAD_ADDR_readium', 'prs_readium:15080')
 PORT = int(os.environ.get('PRS_PORT', 8080))
+SERVICE_URL = os.environ.get('PRS_URL')
+READIUM_HOST_PORT = os.environ.get('NOMAD_ADDR_readium', 'prs_readium:15080')
+
 WORKERS = int(os.environ.get('PRS_WORKERS', 1))
 DEBUG = bool(int(os.environ.get('PRS_DEBUG', 0)))
-DOCKER_GATEWAY = get_docker_default_gateway_ip()
-
+GATEWAY = get_default_gateway_ip()
 LOG_LEVEL = os.environ.get('PRS_LOG_LEVEL', 'info')
-SSL_CRT = os.environ.get('PRS_SSL_CRT')
-SSL_KEY = os.environ.get('PRS_SSL_KEY')
 
 OPTIONS = {
     'host': HOST,
@@ -38,8 +36,5 @@ OPTIONS = {
     'reload': DEBUG,
     'workers': WORKERS,
 }
-if SSL_CRT and SSL_KEY:
-    OPTIONS['ssl_keyfile'] = SSL_KEY
-    OPTIONS['ssl_certfile'] = SSL_CRT
 
-__all__ = ['DOMAIN', 'HOST', 'PORT', 'DEBUG', 'OPTIONS', 'TESTING']
+__all__ = ['SERVICE_URL', 'HOST', 'PORT', 'DEBUG', 'OPTIONS', 'TESTING']

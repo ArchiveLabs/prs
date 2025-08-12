@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from prs.routes import api
-from prs.configs import OPTIONS, DOCKER_GATEWAY
+from prs.configs import OPTIONS, GATEWAY
 from prs import __version__ as VERSION
 
 app = FastAPI(
@@ -13,9 +13,9 @@ app = FastAPI(
     description="Archive Labs Public Readium Service",
     version=VERSION,
 )
-if DOCKER_GATEWAY:
+if GATEWAY:
     app.add_middleware(
-        ProxyHeadersMiddleware, trusted_hosts=[DOCKER_GATEWAY]
+        ProxyHeadersMiddleware, trusted_hosts=[GATEWAY]
     )
 app.add_middleware(
     CORSMiddleware,
