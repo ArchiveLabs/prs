@@ -20,10 +20,12 @@ made available through docker `compose.yml`. Finally, when the python
 application starts, many of these `env` variables are loaded via
 `configs/__init__.py`.
 
+* `PRS_URL` can be (optionally) used to specify the public service URL, e.g. "https://example.com/api"
+
 ## Uvicorn
 
 By default, the application will run publicly on the port specified by
-`PRS_ENV` which defaults to `8080`. Internally within docker, the
+`PRS_PORT` which defaults to `8080`. Internally within docker, the
 Uvicorn service will run on `8083`.
 
 ## Nginx (Reverse Proxy)
