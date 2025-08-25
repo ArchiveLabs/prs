@@ -34,6 +34,21 @@ services:
     networks:
       - prs_network
 
+  reader:
+    build:
+      context: .
+      dockerfile: docker/reader/Dockerfile
+    container_name: prs_reader
+    env_file: .env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - NEXT_PUBLIC_ENABLE_MANIFEST_ROUTE=${NEXT_PUBLIC_ENABLE_MANIFEST_ROUTE}
+      - NEXT_PUBLIC_MANIFEST_FORCE_ENABLE=${NEXT_PUBLIC_MANIFEST_FORCE_ENABLE}
+    ports:
+      - "${READER_PORT:-3000}"
+    networks:
+      - prs_network
+
 networks:
   prs_network:
     driver: bridge

@@ -18,7 +18,8 @@ from fastapi import (
     status
 )
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from prs.configs import BASE_URL, PORT, READIUM_HOST_PORT
+from prs.configs import BASE_URL, PORT, READIUM_HOST_PORT, READER_HOST_PORT
+from urllib.parse import quote
 
 router = APIRouter()
 
@@ -56,14 +57,22 @@ async def apis(request: Request):
         f"{prs_uri(request)}/api/:id/manifest.json": {
             "description": "Generate readium manifest for resource",
             "args": {"source": ["ia", "ol"], "format": ["epub", "pdf"]}
-        }
+        },
+        f"{prs_uri(request)}/api/items/:id/read": {
+            "description": "Redirect to Thorium Web Reader for an item",
+            "args": {"source": ["ia"], "format": ["epub"]}
+        },
     }
 
+
+# Redirect to the Thorium Web Reader
 @router.get("/{source}/{book_id}/read")
-async def redirect_reader(request: Request, source: str, book_id: str):
+async def redirect_thorium_reader(request: Request, book_id: str, format: str = "epub", source: str = "ia"):
+    # Build a manifest URL that our API serves (same as other routes) then hand it to Thorium Web
     manifest_url = f"{prs_uri(request)}/api/{source}/{book_id}/manifest.json"
-    manifest_uri = quote(manifest_url, safe='')
-    return RedirectResponse(f"https://playground.readium.org/read/manifest/{manifest_uri}")
+    encoded_manifest_uri = quote(manifest_url, safe='')
+    reader_url = f"http://{READER_HOST_PORT}/read/manifest/{encoded_manifest_uri}"
+    return RedirectResponse(url=reader_url, status_code=307)
 
 @router.get("/{source}/{book_id}/manifest.json")
 async def get_manifest(request: Request, source: str, book_id: str):

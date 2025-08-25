@@ -23,6 +23,7 @@ HOST = os.environ.get('PRS_HOST', '0.0.0.0')
 PORT = int(os.environ.get('PRS_PORT', 8080))
 BASE_URL = os.environ.get('PRS_BASE_URL', '')
 READIUM_HOST_PORT = os.environ.get('NOMAD_ADDR_readium', 'prs_readium:15080')
+READER_HOST_PORT = os.environ.get('NOMAD_ADDR_reader', 'prs_reader:3000')
 
 WORKERS = int(os.environ.get('PRS_WORKERS', 1))
 DEBUG = bool(int(os.environ.get('PRS_DEBUG', 0)))
