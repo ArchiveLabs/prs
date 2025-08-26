@@ -48,6 +48,12 @@ def prs_uri(request: Request):
     port = f":{PORT}" if PORT not in {80, 443} else ""
     return f"{request.url.scheme}://{request.url.hostname}{port}{BASE_URL}"
 
+def get_thorium_reader_url(request: Request, source: str, book_id: str) -> str:
+    """Generate Thorium Web Reader URL with encoded manifest URL"""
+    manifest_url = f"{prs_uri(request)}/api/{source}/{book_id}/manifest.json"
+    encoded_manifest_uri = quote(manifest_url, safe='')
+    return f"{prs_uri(request)}/thorium/read/manifest/{encoded_manifest_uri}"
+
 @router.get('/', status_code=status.HTTP_200_OK)
 async def apis(request: Request):
     return {
@@ -68,11 +74,17 @@ async def apis(request: Request):
 # Redirect to the Thorium Web Reader
 @router.get("/{source}/{book_id}/read")
 async def redirect_thorium_reader(request: Request, book_id: str, format: str = "epub", source: str = "ia"):
-    # Build a manifest URL that our API serves (same as other routes) then hand it to Thorium Web
-    manifest_url = f"{prs_uri(request)}/api/{source}/{book_id}/manifest.json"
-    encoded_manifest_uri = quote(manifest_url, safe='')
-    reader_url = f"http://{READER_HOST_PORT}/read/manifest/{encoded_manifest_uri}"
+    reader_url = get_thorium_reader_url(request, source, book_id)
     return RedirectResponse(url=reader_url, status_code=307)
+
+# Proxy to Thorium Web Reader (internal container)
+@router.get("/thorium/{path:path}")
+async def thorium_proxy(request: Request, path: str):
+    thorium_url = f"http://{READER_HOST_PORT}/{path}"
+    params = dict(request.query_params)
+    r = requests.get(thorium_url, params=params)
+    content_type = r.headers.get("Content-Type", "text/html")
+    return Response(content=r.content, media_type=content_type)
 
 @router.get("/{source}/{book_id}/manifest.json")
 async def get_manifest(request: Request, source: str, book_id: str):
