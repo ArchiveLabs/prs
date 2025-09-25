@@ -10,7 +10,7 @@
 import base64
 import requests
 import internetarchive as ia
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 from fastapi import (
     APIRouter,
     Request,
@@ -22,7 +22,24 @@ from prs.configs import BASE_URL, PORT, READIUM_HOST_PORT
 
 router = APIRouter()
 
-def ia_get_epub_filepath(item_id):
+def ia_get_epub_filepath(item_id_or_path):
+    # Check if this is a URL-encoded path (contains %2F which is encoded slash)
+    if '%2F' in item_id_or_path:
+        # This is a full path like "goody%2Fgoody.epub"
+        decoded_path = unquote(item_id_or_path)
+        # Split into item_id and file_name
+        parts = decoded_path.split('/', 1)
+        if len(parts) == 2:
+            item_id, file_name = parts
+            return f"https://archive.org/download/{item_id}/{file_name}"
+        else:
+            # If somehow malformed, fall back to treating as item_id
+            item_id = item_id_or_path
+    else:
+        # This is a simple item_id like "goody" - use existing behavior
+        item_id = item_id_or_path
+    
+    # Original behavior: find first EPUB in the item
     item = ia.get_item(item_id)
     for file in item.files:
         if file['name'].endswith('.epub'):
