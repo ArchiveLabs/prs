@@ -22,11 +22,15 @@ from prs.configs import BASE_URL, PORT, READIUM_HOST_PORT
 
 router = APIRouter()
 
-def ia_get_epub_filepath(item_id):
-    item = ia.get_item(item_id)
-    for file in item.files:
-        if file['name'].endswith('.epub'):
-            return f"https://archive.org/download/{item_id}/{file['name']}"
+def ia_get_epub_filepath(item_id_or_path):
+    if '$' in item_id:
+        item_id, filepath = item_id.replace('$', '/').split('/', 1)
+    else:
+        item = ia.get_item(item_id)
+        for file in item.files:
+            if file['name'].endswith('.epub'):
+                filepath = file['name']
+    return f"https://archive.org/download/{item_id}/{filepath}"
 
 def ol_get_epub_filepath(olid):
     # fetch olid from openlibrary and get url (if ends with epub)
