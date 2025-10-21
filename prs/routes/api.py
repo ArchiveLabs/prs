@@ -23,8 +23,8 @@ from prs.configs import BASE_URL, PORT, READIUM_HOST_PORT
 router = APIRouter()
 
 def ia_get_epub_filepath(item_id):
-    if '$' in item_id:
-        item_id, filepath = item_id.replace('$', '/').split('/', 1)
+    if ':' in item_id:
+        item_id, filepath = item_id.replace(':', '/').split('/', 1)
     else:
         item = ia.get_item(item_id)
         for file in item.files:
