@@ -19,8 +19,18 @@ from fastapi import (
 )
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from prs.configs import BASE_URL, PORT, READIUM_HOST_PORT
+import subprocess
 
 router = APIRouter()
+
+def get_git_revision_short_hash():
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=None
+        ).decode("ascii").strip()
+    except Exception:
+        return None
 
 def ia_get_epub_filepath(item_id):
     if ':' in item_id:
@@ -53,7 +63,9 @@ def prs_uri(request: Request):
 
 @router.get('/', status_code=status.HTTP_200_OK)
 async def apis(request: Request):
+    version = get_git_revision_short_hash()
     return {
+        "version": version,
         f"{prs_uri(request)}/api": {
             "description": "List all APIs",
         },
